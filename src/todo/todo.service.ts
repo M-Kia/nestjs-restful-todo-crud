@@ -44,14 +44,13 @@ export class TodoService {
   }
 
   async create(data: Prisma.TodoCreateInput): Promise<Todo> {
-    return await this.prisma.todo.create({
-      data,
-    });
+    return await this.prisma.todo.create({ data });
   }
 
   async update(params: UpdateTodoParameters): Promise<Todo> {
     const { data, where } = params;
 
+    // TODO: This block should go to prisma middleware
     const todo = await this.prisma.todo.findUnique({ where });
     if (todo === null) {
       throw new Error('Todo not found.');
@@ -66,6 +65,7 @@ export class TodoService {
 
       data.state;
     }
+    // End of the block
 
     return await this.prisma.todo.update({
       where,
