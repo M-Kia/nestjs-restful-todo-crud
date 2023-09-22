@@ -1,4 +1,4 @@
-# todo-crud-express
+# NestJs-Restful-Todo-CRUD
 
 ___It is a simple Todo CRUD application for learning NestJs, Prisma and Swagger.___
 
