@@ -19,6 +19,7 @@ import {
   ApiInternalServerErrorResponse,
   getSchemaPath,
   ApiQuery,
+  ApiOperation,
 } from '@nestjs/swagger';
 
 import { Todo, TodoState } from '@prisma/client';
@@ -37,6 +38,7 @@ export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Get list of Todo with offset and limit option.' })
   @ApiQuery({
     name: 'o',
     type: 'integer',
@@ -52,6 +54,7 @@ export class TodoController {
     required: false,
   })
   @ApiOkResponse({
+    description: 'Returns a list of Todo.',
     schema: {
       properties: {
         todo: {
@@ -77,9 +80,16 @@ export class TodoController {
   }
 
   @Get(':id')
-  @ApiOkResponse({ type: TodoEntity })
-  @ApiInternalServerErrorResponse({ type: InternalServerErrorEntity })
-  @ApiNotFoundResponse({ type: NotFoundErrorEntity })
+  @ApiOperation({ summary: "Get a specific Todo by it's ID." })
+  @ApiOkResponse({ description: 'Returns the Todo.', type: TodoEntity })
+  @ApiInternalServerErrorResponse({
+    description: 'It occurs when you send wrong ID format(not numeric)',
+    type: InternalServerErrorEntity,
+  })
+  @ApiNotFoundResponse({
+    description: 'It occurs when there is no Todo with the entry ID.',
+    type: NotFoundErrorEntity,
+  })
   async getTodoById(@Param('id') id: string) {
     if (isNaN(+id)) {
       throw new HttpException('Wrong id Provided!', 500);
@@ -94,15 +104,37 @@ export class TodoController {
   }
 
   @Post()
-  @ApiCreatedResponse({ type: TodoEntity })
-  async addTodo(@Body() createTodo: CreateTodoDto) {
-    return await this.todoService.create(createTodo);
+  @ApiOperation({ summary: 'Create new Todo' })
+  @ApiCreatedResponse({
+    description: 'Returns the created Todo.',
+    type: TodoEntity,
+  })
+  @ApiInternalServerErrorResponse({
+    description: "It occurs when you don't send title",
+    type: InternalServerErrorEntity,
+  })
+  async addTodo(@Body() { title, description }: CreateTodoDto) {
+    if (title === undefined) {
+      throw new HttpException('Title must be provided', 500);
+    }
+
+    return await this.todoService.create({ title, description });
   }
 
   @Put(':id')
-  @ApiOkResponse({ type: TodoEntity })
-  @ApiInternalServerErrorResponse({ type: InternalServerErrorEntity })
-  @ApiNotFoundResponse({ type: NotFoundErrorEntity })
+  @ApiOperation({ summary: 'Update title and description of Todo' })
+  @ApiOkResponse({
+    description: "Returns the Todo with it's latest changes.",
+    type: TodoEntity,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'It occurs when you send wrong ID format(not numeric)',
+    type: InternalServerErrorEntity,
+  })
+  @ApiNotFoundResponse({
+    description: 'It occurs when there is no Todo with the entry ID.',
+    type: NotFoundErrorEntity,
+  })
   async updateTodo(
     @Param('id') id: string,
     @Body() { title, description }: UpdateTodoDto,
@@ -122,9 +154,20 @@ export class TodoController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: TodoEntity })
-  @ApiInternalServerErrorResponse({ type: InternalServerErrorEntity })
-  @ApiNotFoundResponse({ type: NotFoundErrorEntity })
+  @ApiOperation({ summary: 'update state of Todo.' })
+  @ApiOkResponse({
+    description: "Returns the Todo with it's latest changes.",
+    type: TodoEntity,
+  })
+  @ApiInternalServerErrorResponse({
+    description:
+      'It occurs when you send either wrong ID format(not numeric) or wrong state(neither Done nor Undone)',
+    type: InternalServerErrorEntity,
+  })
+  @ApiNotFoundResponse({
+    description: 'It occurs when there is no Todo with the entry ID.',
+    type: NotFoundErrorEntity,
+  })
   async changeTodoState(
     @Param('id') id: string,
     @Body() { state }: ChangeTodoStateDto,
@@ -148,9 +191,16 @@ export class TodoController {
   }
 
   @Delete(':id')
-  @ApiOkResponse({ type: TodoEntity })
-  @ApiInternalServerErrorResponse({ type: InternalServerErrorEntity })
-  @ApiNotFoundResponse({ type: NotFoundErrorEntity })
+  @ApiOperation({ summary: 'Delete a specific Todo.' })
+  @ApiOkResponse({ description: 'Returns the deleted Todo.', type: TodoEntity })
+  @ApiInternalServerErrorResponse({
+    description: 'It occurs when you send wrong ID format(not numeric)',
+    type: InternalServerErrorEntity,
+  })
+  @ApiNotFoundResponse({
+    description: 'It occurs when there is no Todo with the entry ID.',
+    type: NotFoundErrorEntity,
+  })
   async deleteTodo(@Param('id') id: string) {
     if (isNaN(+id)) {
       throw new HttpException('Wrong id Provided!', 500);
